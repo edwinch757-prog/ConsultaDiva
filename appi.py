@@ -11,7 +11,7 @@ st.markdown("""
     .stButton>button { background-color: #1E3A8A; color: white; border-radius: 6px; width: 100%; }
     .total-box { background-color: #E0E7FF; padding: 15px; border-radius: 8px; text-align: right; font-size: 20px; font-weight: bold; color: #1E3A8A; }
     </style>
-""", unsafe_index=True)
+""", unsafe_allow_html=True)
 
 # --- 1. FUNCIÓN PARA LIMPIAR Y PROCESAR EL EXCEL ---
 def procesar_excel(file):
