@@ -1,3 +1,12 @@
+# --- TRUCO DE INSTALACIÓN FORZADA (Líneas iniciales) ---
+import os
+try:
+    import openpyxl
+except ImportError:
+    os.system('pip install openpyxl')
+    import openpyxl
+
+# --- IMPORTACIÓN DE LIBRERÍAS NORMALES ---
 import streamlit as st
 import pandas as pd
 import re
@@ -88,7 +97,7 @@ with tab1:
         df_APP = st.session_state['base_datos']
         
         st.subheader("Nueva Cotización")
-        metodo_busqueda = sk = st.radio("Selecciona el método de entrada:", ["Escribir texto corrido (Rápido)", "Celdas independientes (Preciso)"])
+        metodo_busqueda = st.radio("Selecciona el método de entrada:", ["Escribir texto corrido (Rápido)", "Celdas independientes (Preciso)"])
         
         productos_a_cotizar = []
         
@@ -114,18 +123,13 @@ with tab1:
             entrada_rapida = st.text_area("Entrada rápida", placeholder="Ejemplo: prado 100*200, bo 120*150, panel 250*100")
             
             if st.button("Procesar Líneas"):
-                # Separamos por comas las distintas cortinas
                 items = entrada_rapida.split(",")
                 for item in items:
                     if '*' in item:
                         try:
-                            # Extraer las medidas usando expresiones regulares
                             partes_texto = item.split()
-                            # El último elemento suele tener las medidas (ej: 100*200)
                             medidas = partes_texto[-1]
                             ancho_r, alto_r = map(float, medidas.split('*'))
-                            
-                            # El resto del texto es la colección (ej: "roles duo prado")
                             coleccion_r = " ".join(partes_texto[:-1])
                             
                             res = buscar_producto(df_APP, coleccion_r, ancho_r, alto_r)
@@ -144,3 +148,4 @@ with tab1:
             
             total_proyecto = df_resumen['Precio_Venta'].sum()
             st.markdown(f"<div class='total-box'>TOTAL PROYECTO: ${total_proyecto:,.0f} COP</div>", unsafe_allow_html=True)
+            
