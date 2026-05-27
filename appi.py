@@ -50,7 +50,7 @@ tab1, tab2 = st.tabs(["🔍 Módulo de Consulta", "🗄️ Base de Datos e IA"])
 
 with tab2:
     st.subheader("Carga de Matriz de Precios")
-    archivo = st.file_uploader("Sube tu archivo de Excel (Columnas A a la K)", type=["xlsx"])
+    archivo = st.file_uploader("Sube tu archivo de Excel (Columnas A a la K)", type=["csv"])
     
     if archivo:
         try:
