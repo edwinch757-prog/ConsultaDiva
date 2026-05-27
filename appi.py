@@ -15,7 +15,7 @@ st.markdown("""
 
 # --- 1. FUNCIÓN PARA LIMPIAR Y PROCESAR EL EXCEL ---
 def procesar_excel(file):
-    df = pd.read_excel(file)
+    df = pd.read_csv(file)
     df.columns = ['Tipo', 'Rango_Ancho', 'Rango_Alto', 'Descripcion', 'Coleccion', 'Color', 'SKU', 'EAN', 'Costo', 'Precio_Venta', 'Nombre_Completo']
     
     df[['Ancho_Min', 'Ancho_Max']] = df['Rango_Ancho'].astype(str).str.split('-', expand=True).astype(float)
