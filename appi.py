@@ -1,12 +1,3 @@
-# --- TRUCO DE INSTALACIÓN FORZADA (Líneas iniciales) ---
-import os
-try:
-    import openpyxl
-except ImportError:
-    os.system('pip install openpyxl')
-    import openpyxl
-
-# --- IMPORTACIÓN DE LIBRERÍAS NORMALES ---
 import streamlit as st
 import pandas as pd
 import re
@@ -24,32 +15,23 @@ st.markdown("""
 
 # --- 1. FUNCIÓN PARA LIMPIAR Y PROCESAR EL EXCEL ---
 def procesar_excel(file):
-    # Lee el archivo respetando las columnas de la A a la K
     df = pd.read_excel(file)
-    
-    # Renombramos internamente para que coincida con tu estructura de la A a la K
-    # A=Tipo, B=Rango_Ancho, C=Rango_Alto, D=Descripcion, E=Coleccion, F=Color, G=SKU, J=Precio
     df.columns = ['Tipo', 'Rango_Ancho', 'Rango_Alto', 'Descripcion', 'Coleccion', 'Color', 'SKU', 'EAN', 'Costo', 'Precio_Venta', 'Nombre_Completo']
     
-    # Limpieza de rangos con guion (ej: "80-100" -> Min: 80, Max: 100)
     df[['Ancho_Min', 'Ancho_Max']] = df['Rango_Ancho'].astype(str).str.split('-', expand=True).astype(float)
     df[['Alto_Min', 'Alto_Max']] = df['Rango_Alto'].astype(str).str.split('-', expand=True).astype(float)
     
-    # Estandarizar texto a minúsculas y sin espacios para evitar errores de digitación
     df['Coleccion_Clean'] = df['Coleccion'].astype(str).str.lower().str.strip()
     df['Tipo_Clean'] = df['Tipo'].astype(str).str.lower().str.strip()
-    
     return df
 
 # --- 2. MOTOR DE BÚSQUEDA MATEMÁTICA ---
 def buscar_producto(df, termino_busqueda, ancho, alto):
     termino = str(termino_busqueda).lower().strip()
-    # Soporta abreviaturas comunes
     if termino == 'bo': termino = 'blackout'
     if termino == 'panl': termino = 'panel'
     if termino == 'alu': termino = 'aluminio'
     
-    # Filtro por texto en tipo o colección, y coincidencia matemática de rangos
     resultado = df[
         ((df['Coleccion_Clean'].str.contains(termino)) | (df['Tipo_Clean'].str.contains(termino))) &
         (df['Ancho_Min'] <= ancho) & (df['Ancho_Max'] >= ancho) &
@@ -61,13 +43,11 @@ def buscar_producto(df, termino_busqueda, ancho, alto):
 st.title("✨ Consulta DIVA")
 st.caption("Sistema Inteligente de Cotización y Consulta de Cortinas")
 
-# Inicializar base de datos en la sesión
 if 'base_datos' not in st.session_state:
     st.session_state['base_datos'] = None
 
 tab1, tab2 = st.tabs(["🔍 Módulo de Consulta", "🗄️ Base de Datos e IA"])
 
-# --- TAB 2: BASE DE DATOS (Primero para cargar el archivo) ---
 with tab2:
     st.subheader("Carga de Matriz de Precios")
     archivo = st.file_uploader("Sube tu archivo de Excel (Columnas A a la K)", type=["xlsx"])
@@ -84,18 +64,15 @@ with tab2:
     comando_ia = st.text_input("Escribe un comando para alterar la base de datos (Ej: 'Subir 5% a Prado')")
     if comando_ia:
         if st.session_state['base_datos'] is not None:
-            # Aquí se conectará el modelo de lenguaje en el despliegue final
             st.info(f"Comando recibido: '{comando_ia}'. Modificando base de datos en memoria...")
         else:
             st.warning("Primero debes subir un archivo de Excel para poder hacer modificaciones.")
 
-# --- TAB 1: CONSULTA Y RESPUESTA ---
 with tab1:
     if st.session_state['base_datos'] is None:
         st.info("👋 ¡Bienvenido a Consulta DIVA! Por favor, ve a la pestaña 'Base de Datos' y sube tu archivo de Excel para empezar a cotizar.")
     else:
         df_APP = st.session_state['base_datos']
-        
         st.subheader("Nueva Cotización")
         metodo_busqueda = st.radio("Selecciona el método de entrada:", ["Escribir texto corrido (Rápido)", "Celdas independientes (Preciso)"])
         
@@ -117,11 +94,8 @@ with tab1:
                     st.success(f"Agregado: {res.iloc[0]['SKU']} - ${res.iloc[0]['Precio_Venta']:,}")
                 else:
                     st.error("No se encontró un rango de medidas que coincida.")
-                    
         else:
-            # MODO RÁPIDO: Escribir corrido "prado 100*200, blackout 120*150"
-            entrada_rapida = st.text_area("Entrada rápida", placeholder="Ejemplo: prado 100*200, bo 120*150, panel 250*100")
-            
+            entrada_rapida = st.text_area("Entrada rápida", placeholder="Ejemplo: prado 100*200, bo 120*150")
             if st.button("Procesar Líneas"):
                 items = entrada_rapida.split(",")
                 for item in items:
@@ -136,16 +110,11 @@ with tab1:
                             if not res.empty:
                                 productos_a_cotizar.append(res.iloc[0])
                         except:
-                            st.error(f"No pude entender el formato de: '{item}'. Recuerda usar Ancho*Alto.")
+                            st.error(f"No pude entender el formato de: '{item}'.")
 
-        # --- TABLA DE RESULTADOS TOTALES ---
         if productos_a_cotizar:
             st.write("### Resumen del Proyecto")
             df_resumen = pd.DataFrame(productos_a_cotizar)
-            
-            # Mostramos solo lo que necesitas ver frente al cliente
             st.table(df_resumen[['SKU', 'Tipo', 'Coleccion', 'Color', 'Rango_Ancho', 'Rango_Alto', 'Precio_Venta']])
-            
             total_proyecto = df_resumen['Precio_Venta'].sum()
             st.markdown(f"<div class='total-box'>TOTAL PROYECTO: ${total_proyecto:,.0f} COP</div>", unsafe_allow_html=True)
-            
